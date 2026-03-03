@@ -232,11 +232,34 @@ to{opacity:1; transform:translateY(0);}
 <div class="controls">
 <select id="historyMonth"></select>
 <button onclick="loadHistory()">Load</button>
+<button onclick="clearHistory()" style="background:#ff4b5c;color:white">
+Clear History
+</button>
 </div>
 
 <div id="historyList"></div>
 
 <canvas id="analyticsChart"></canvas>
+
+
+
+<div id="undoBox" style="
+display:none;
+background:#ff4b5c;
+padding:10px;
+margin:10px;
+text-align:center;
+border-radius:10px;
+">
+History will be deleted in 10 seconds...
+<button onclick="undoDelete()" style="margin-left:10px;background:white;color:black">
+UNDO
+</button>
+</div>
+
+
+
+
 
 <button onclick="downloadMonthlyCSV()">Download Monthly CSV</button>
 
@@ -254,7 +277,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/fireba
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged }
 from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, doc,
-updateDoc, deleteDoc, query, where, onSnapshot }
+updateDoc, deleteDoc, query, where, onSnapshot, orderBy }
 from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -271,6 +294,11 @@ const auth = getAuth(appFirebase);
 const db = getFirestore(appFirebase);
 
 let currentTeacher=null;
+
+
+
+let pendingDeletes = [];
+let deleteTimer = null;
 
 const classes=[
 "11th Arts","11th Commerce","11th Science",
@@ -331,7 +359,8 @@ teacher:currentTeacher,
 class:classSelect.value,
 date:dateSelect.value,
 name:studentName.value,
-status:"Absent"
+status:"Absent",
+createdAt: Date.now()
 });
 
 studentName.value="";
@@ -345,12 +374,12 @@ renderStudents();
 
 
 async function renderStudents(){
-
 let q=query(
 collection(db,"attendance"),
 where("teacher","==",currentTeacher),
 where("class","==",classSelect.value),
-where("date","==",dateSelect.value)
+where("date","==",dateSelect.value),
+orderBy("createdAt","asc")
 );
 
 onSnapshot(q,(snap)=>{
@@ -453,28 +482,67 @@ loadHistory();
 };
 
 
+window.undoDelete = () => {
+clearTimeout(deleteTimer);
+pendingDeletes = [];
+document.getElementById("undoBox").style.display="none";
+alert("Delete Cancelled");
+};
 
 
-window.downloadMonthlyCSV=()=>{
-let month=historyMonth.value;
-let csv="Date,Class,Name,Status\n";
 
-getDocs(collection(db,"attendance")).then(snap=>{
+
+
+window.clearHistory = async () => {
+
+let month = historyMonth.value;
+
+if(!month){
+alert("Please select month first");
+return;
+}
+
+// Confirm first
+if(!confirm("Are you sure you want to delete ALL history of this month?")){
+return;
+}
+
+let snap = await getDocs(collection(db,"attendance"));
+
+pendingDeletes = [];
+
 snap.forEach(d=>{
-let data=d.data();
+let data = d.data();
+
 if(data.teacher===currentTeacher && data.date.startsWith(month)){
-csv+=`${data.date},${data.class},${data.name},${data.status}\n`;
+pendingDeletes.push(d.id);
 }
 });
 
-let blob=new Blob([csv],{type:"text/csv"});
-let a=document.createElement("a");
-a.href=URL.createObjectURL(blob);
-a.download=`Attendance_${month}.csv`;
-a.click();
-});
-};
+if(pendingDeletes.length===0){
+alert("No records found");
+return;
+}
 
+showUndoMessage();
+
+deleteTimer = setTimeout(async ()=>{
+
+let deletePromises = [];
+
+pendingDeletes.forEach(id=>{
+deletePromises.push(deleteDoc(doc(db,"attendance",id)));
+});
+
+await Promise.all(deletePromises);
+
+pendingDeletes = [];
+document.getElementById("undoBox").style.display="none";
+loadHistory();
+
+},10000);
+
+};
 
 window.generateAnalytics=()=>{
 let month=historyMonth.value;
@@ -518,6 +586,17 @@ ctx.fillText((100-percent)+"% Absent",180,195);
 
 });
 };
+
+
+
+
+function showUndoMessage(){
+let box = document.getElementById("undoBox");
+box.style.display="block";
+}
+
+
+
 </script>
 </body>
 </html>
