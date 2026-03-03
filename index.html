@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neon Attendance Pro - Master</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI}
+body{
+height:100vh;
+background:linear-gradient(-45deg,#0f0c29,#302b63,#24243e,#00f2fe);
+background-size:400% 400%;
+animation:bg 12s ease infinite;
+display:flex;justify-content:center;align-items:center;color:white}
+@keyframes bg{
+0%{background-position:0% 50%}
+50%{background-position:100% 50%}
+100%{background-position:0% 50%}
+}
+.glass{
+width:95%;max-width:1000px;height:95vh;
+background:rgba(255,255,255,0.05);
+border-radius:25px;
+backdrop-filter:blur(20px);
+box-shadow:0 0 40px rgba(0,255,255,0.4);
+display:flex;flex-direction:column;
+}
+input,select,button{
+padding:10px;border-radius:20px;border:none;font-weight:bold}
+input,select{
+background:rgba(255,255,255,0.1);color:white}
+button{background:#00f2fe;cursor:pointer;margin:3px}
+button:hover{transform:scale(1.05)}
+#loginPage{
+display:flex;flex-direction:column;justify-content:center;
+align-items:center;height:100%;gap:10px}
+.login-buttons{display:flex;gap:10px;width:300px}
+#app{display:none;flex-direction:column;height:100%}
+.header{
+padding:15px;background:rgba(0,0,0,0.3);
+text-align:center;font-size:18px;position:sticky;top:0}
+.controls{
+padding:10px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+#studentList,#historyList{
+flex:1;overflow-y:auto;padding:10px}
+.student{
+display:flex;justify-content:space-between;
+background:rgba(255,255,255,0.08);
+margin:8px 0;padding:10px;border-radius:15px}
+.present{background:#00ff88;color:black}
+.absent{background:#ff4b5c;color:white}
+.stats{text-align:center;padding:5px}
+.credit{text-align:center;font-size:13px;padding:5px;opacity:0.8}
+.credit span{color:#00f2fe;text-shadow:0 0 10px #00f2fe}
+.page{display:none;flex-direction:column;height:100%}
+.active{display:flex}
+</style>
+</head>
+
+<body>
+<div class="glass">
+
+<!-- LOGIN -->
+<div id="loginPage">
+<h2>🔐 Teacher Register / Login</h2>
+<input type="email" id="teacherEmail" placeholder="Email">
+<input type="password" id="teacherPass" placeholder="Password">
+<div class="login-buttons">
+<button id="registerBtn">Register</button>
+<button id="loginBtn">Login</button>
+</div>
+<div id="errorMsg" style="color:#ff4b5c"></div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+<div class="header">
+📘 Neon Attendance Pro
+<span id="welcome"></span>
+<button onclick="showAttendance()">Attendance</button>
+<button onclick="showHistory()">History</button>
+<button onclick="logout()">Logout</button>
+</div>
+
+<!-- ATTENDANCE PAGE -->
+<div id="attendancePage" class="page active">
+
+<div class="controls">
+<select id="classSelect"></select>
+<input type="date" id="dateSelect">
+<input type="text" id="studentName" placeholder="Student Name">
+<button onclick="addStudent()">Add</button>
+<button onclick="downloadCSV()">Download CSV</button>
+</div>
+
+<div id="classTeacher" style="text-align:center"></div>
+<div id="studentList"></div>
+<div class="stats" id="stats"></div>
+
+</div>
+
+<!-- HISTORY PAGE -->
+<div id="historyPage" class="page">
+<div class="controls">
+<select id="historyMonth"></select>
+<button onclick="loadHistory()">Load</button>
+</div>
+<div id="historyList"></div>
+</div>
+
+<div class="credit">
+© 2026 | Designed & Developed By <span>Zakariya Mukadam</span>
+</div>
+
+</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where }
+from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyD-ALQAWk3vDfEX5MoeJ5yMFskuyA1wBiA",
+authDomain: "neon-attendance-system.firebaseapp.com",
+projectId: "neon-attendance-system",
+storageBucket: "neon-attendance-system.firebasestorage.app",
+messagingSenderId: "1007195721127",
+appId: "1:1007195721127:web:449457ade62226c5b9ba82"
+};
+
+const appFirebase = initializeApp(firebaseConfig);
+const auth = getAuth(appFirebase);
+const db = getFirestore(appFirebase);
+
+let currentTeacher=null;
+
+const classes=[
+"11th Arts","11th Commerce","11th Science",
+"12th Arts","12th Commerce","12th Science"
+];
+
+classes.forEach(c=>{
+classSelect.innerHTML+=`<option>${c}</option>`;
+});
+
+dateSelect.value=new Date().toISOString().split("T")[0];
+
+registerBtn.onclick=async()=>{
+try{
+await createUserWithEmailAndPassword(auth,teacherEmail.value,teacherPass.value);
+}catch(e){errorMsg.innerText=e.message;}
+};
+
+loginBtn.onclick=async()=>{
+try{
+await signInWithEmailAndPassword(auth,teacherEmail.value,teacherPass.value);
+}catch(e){errorMsg.innerText=e.message;}
+};
+
+window.logout=()=>signOut(auth);
+
+onAuthStateChanged(auth,(user)=>{
+if(user){
+currentTeacher=user.email;
+loginPage.style.display="none";
+app.style.display="flex";
+welcome.innerText=" | "+currentTeacher;
+renderStudents();
+}else{
+loginPage.style.display="flex";
+app.style.display="none";
+}
+});
+
+window.showAttendance=()=>{
+attendancePage.classList.add("active");
+historyPage.classList.remove("active");
+};
+
+window.showHistory=()=>{
+attendancePage.classList.remove("active");
+historyPage.classList.add("active");
+populateMonths();
+};
+
+window.addStudent=async()=>{
+if(!studentName.value)return;
+await addDoc(collection(db,"attendance"),{
+teacher:currentTeacher,
+class:classSelect.value,
+date:dateSelect.value,
+name:studentName.value,
+status:"Absent"
+});
+studentName.value="";
+renderStudents();
+};
+
+async function renderStudents(){
+let q=query(
+collection(db,"attendance"),
+where("teacher","==",currentTeacher),
+where("class","==",classSelect.value),
+where("date","==",dateSelect.value)
+);
+let snap=await getDocs(q);
+studentList.innerHTML="";
+let total=0,present=0;
+
+snap.forEach(docSnap=>{
+let s=docSnap.data();
+total++;
+if(s.status==="Present")present++;
+studentList.innerHTML+=`
+<div class="student">
+<span>${s.name}</span>
+<div>
+<button class="${s.status==='Present'?'present':'absent'}"
+onclick="toggleStatus('${docSnap.id}','${s.status}')">${s.status}</button>
+<button onclick="editStudent('${docSnap.id}','${s.name}')">✏</button>
+<button onclick="deleteStudent('${docSnap.id}')">🗑</button>
+</div>
+</div>`;
+});
+stats.innerText=`Total: ${total} | Present: ${present}`;
+}
+
+window.toggleStatus=async(id,status)=>{
+let newStatus=status==="Present"?"Absent":"Present";
+await updateDoc(doc(db,"attendance",id),{status:newStatus});
+renderStudents();
+};
+
+window.editStudent=async(id,name)=>{
+let newName=prompt("Edit Name:",name);
+if(newName)
+await updateDoc(doc(db,"attendance",id),{name:newName});
+renderStudents();
+};
+
+window.deleteStudent=async(id)=>{
+if(confirm("Delete student?")){
+await deleteDoc(doc(db,"attendance",id));
+renderStudents();
+}
+};
+
+function populateMonths(){
+let months=new Set();
+getDocs(collection(db,"attendance")).then(snap=>{
+snap.forEach(d=>{
+if(d.data().teacher===currentTeacher){
+months.add(d.data().date.substring(0,7));
+}
+});
+historyMonth.innerHTML="";
+months.forEach(m=>{
+historyMonth.innerHTML+=`<option>${m}</option>`;
+});
+});
+}
+
+window.loadHistory=()=>{
+let month=historyMonth.value;
+historyList.innerHTML="";
+getDocs(collection(db,"attendance")).then(snap=>{
+snap.forEach(d=>{
+let data=d.data();
+if(data.teacher===currentTeacher && data.date.startsWith(month)){
+historyList.innerHTML+=`<div>${data.date} - ${data.class} - ${data.name} - ${data.status}</div>`;
+}
+});
+});
+};
+
+window.downloadCSV=()=>{
+let csv="Name,Status\n";
+getDocs(collection(db,"attendance")).then(snap=>{
+snap.forEach(d=>{
+let data=d.data();
+if(data.teacher===currentTeacher && data.date===dateSelect.value){
+csv+=`${data.name},${data.status}\n`;
+}
+});
+let blob=new Blob([csv],{type:"text/csv"});
+let a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="Attendance.csv";
+a.click();
+});
+};
+</script>
+</body>
+</html>
