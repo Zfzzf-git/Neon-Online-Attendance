@@ -8,6 +8,52 @@
 <style>
     
     
+    #loginPage.success{
+box-shadow:0 0 60px #00ff88;
+animation:successGlow 0.6s ease;
+}
+
+@keyframes successGlow{
+from{transform:scale(0.95);}
+to{transform:scale(1);}
+}
+    
+    
+    
+    .inputBox{
+position:relative;
+width:260px;
+}
+
+.inputBox input{
+width:100%;
+padding:14px 20px;
+background:rgba(255,255,255,0.08);
+border-radius:30px;
+border:2px solid transparent;
+color:white;
+outline:none;
+}
+
+.inputBox label{
+position:absolute;
+left:20px;
+top:14px;
+color:#aaa;
+pointer-events:none;
+transition:0.3s;
+}
+
+.inputBox input:focus + label,
+.inputBox input:valid + label{
+top:-10px;
+left:15px;
+font-size:12px;
+color:#00f2fe;
+background:#1c1c2e;
+padding:0 6px;
+border-radius:10px;
+}
  
 
 #studentList,
@@ -180,14 +226,16 @@ to{opacity:1; transform:translateY(0);}
 
 <!-- LOGIN -->
 <div id="loginPage">
-<h2>🔐 Teacher Register / Login</h2>
-<input type="email" id="teacherEmail" placeholder="Email">
-<input type="password" id="teacherPass" placeholder="Password">
-<div class="login-buttons">
-<button id="registerBtn">Register</button>
-<button id="loginBtn">Login</button>
+<h2>🔐 Teacher Login</h2>
+
+<div class="inputBox">
+<input type="email" id="teacherEmail" required>
+<label>Email Address</label>
 </div>
-<div id="errorMsg" style="color:#ff4b5c"></div>
+
+<button id="loginBtn">Send Login Link</button>
+
+<div id="errorMsg"></div>
 </div>
 
 <!-- APP -->
@@ -251,8 +299,7 @@ to{opacity:1; transform:translateY(0);}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged }
-from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+import { getAuth, signOut, onAuthStateChanged, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, doc,
 updateDoc, deleteDoc, query, where, onSnapshot }
 from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
@@ -283,22 +330,38 @@ classSelect.innerHTML+=`<option>${c}</option>`;
 
 dateSelect.value=new Date().toISOString().split("T")[0];
 
-registerBtn.onclick=async()=>{
-try{
-await createUserWithEmailAndPassword(auth,teacherEmail.value,teacherPass.value);
-}catch(e){errorMsg.innerText=e.message;}
+
+const actionCodeSettings = {
+url: window.location.href,
+handleCodeInApp: true
 };
 
-loginBtn.onclick=async()=>{
+loginBtn.onclick = async () => {
 try{
-await signInWithEmailAndPassword(auth,teacherEmail.value,teacherPass.value);
-}catch(e){errorMsg.innerText=e.message;}
+await sendSignInLinkToEmail(auth, teacherEmail.value, actionCodeSettings);
+localStorage.setItem("emailForSignIn", teacherEmail.value);
+alert("Login link sent to your email!");
+}catch(e){
+errorMsg.innerText = e.message;
+}
 };
+
+if(isSignInWithEmailLink(auth, window.location.href)){
+let email = localStorage.getItem("emailForSignIn");
+signInWithEmailLink(auth, email, window.location.href);
+}
 
 window.logout=()=>signOut(auth);
 
 onAuthStateChanged(auth,(user)=>{
 if(user){
+
+
+loginPage.classList.add("success");
+
+
+
+
 currentTeacher=user.email;
 loginPage.style.display="none";
 app.style.display="flex";
