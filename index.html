@@ -811,6 +811,55 @@ renderStudents();
 
 
 
+
+function downloadCSV() {
+
+    let rows = [];
+    
+    // Header row
+    rows.push(["Roll No", "Name", "Status"]);
+
+    // Student list se data lo
+    document.querySelectorAll(".student").forEach(student => {
+
+        let text = student.innerText.split("\n");
+
+        let firstLine = text[0]; // (1) Name
+        let status = text[1] || "";
+
+        rows.push([firstLine, status]);
+    });
+
+    // Convert to CSV format
+    let csvContent = rows.map(e => e.join(",")).join("\n");
+
+    // Create download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "attendance.csv";
+    a.style.display = "none";
+
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(url);
+}
+
+
+
+
+
+
+
+
+
+
+
+
 </script>
 </body>
 </html>
