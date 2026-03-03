@@ -365,7 +365,6 @@ UNDO
 
 <button onclick="downloadMonthlyCSV()">Download Monthly CSV</button>
 
-
 <div class="credit">
 © 2026 | Designed & Developed By <span>Zakariya Mukadam</span>
 </div>
@@ -842,6 +841,67 @@ window.downloadCSV = function() {
 
     URL.revokeObjectURL(url);
 };
+
+
+
+
+
+
+window.downloadMonthlyCSV = async function() {
+
+    let month = historyMonth.value;
+
+    if(!month){
+        alert("Please select month first");
+        return;
+    }
+
+    let rows = [];
+    rows.push(["Date","Class","Name","Status"]);
+
+    let q = query(
+        collection(db,"attendance"),
+        where("teacher","==",currentTeacher)
+    );
+
+    let snap = await getDocs(q);
+
+    snap.forEach(d=>{
+        let data = d.data();
+
+        if(data.date.startsWith(month)){
+            rows.push([
+                data.date,
+                data.class,
+                data.name,
+                data.status
+            ]);
+        }
+    });
+
+    if(rows.length === 1){
+        alert("No data found for this month");
+        return;
+    }
+
+    let csvContent = rows.map(e => e.join(",")).join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Attendance_${month}.csv`;
+    a.style.display = "none";
+
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(url);
+};
+
+
 
 
 
