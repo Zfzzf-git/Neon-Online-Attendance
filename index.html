@@ -9,13 +9,14 @@
     
     
  
-
 #studentList,
 #historyList{
 flex:1;
 overflow-y:auto;
 padding:10px;
+min-height:0;
 }
+
     
     
 *{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI}
@@ -30,14 +31,26 @@ display:flex;justify-content:center;align-items:center;color:white}
 50%{background-position:100% 50%}
 100%{background-position:0% 50%}
 }
+
+
+
 .glass{
-width:95%;max-width:1000px;height:95vh;
+position:relative;
+width:95%;
+max-width:1000px;
+height:95vh;
 background:rgba(255,255,255,0.05);
 border-radius:25px;
 backdrop-filter:blur(20px);
 box-shadow:0 0 40px rgba(0,255,255,0.4);
-display:flex;flex-direction:column;
+display:flex;
+flex-direction:column;
+overflow:hidden;   /* IMPORTANT */
 }
+
+
+
+
 input,select,button{
 padding:10px;border-radius:20px;border:none;font-weight:bold}
 input,select{
@@ -54,18 +67,17 @@ padding:15px;background:rgba(0,0,0,0.3);
 text-align:center;font-size:18px;position:sticky;top:0}
 .controls{
 padding:10px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
-#studentList,#historyList{
-height:100%;
-overflow-y:auto;
-padding:10px;
-}
+
+
+
+
+
 
 .page{
 display:none;
 flex-direction:column;
-height:100%;
 flex:1;
-overflow:hidden;
+min-height:0;   /* IMPORTANT for scroll fix */
 }
 
 .page.active{
@@ -74,15 +86,43 @@ display:flex;
 
 
 
+
+
+
 .student{
-display:flex;justify-content:space-between;
+display:flex;
+justify-content:space-between;
+align-items:center;
 background:rgba(255,255,255,0.08);
-margin:8px 0;padding:10px;border-radius:15px}
+margin:8px 0;
+padding:12px;
+border-radius:15px;
+gap:10px;
+}
+
+.student span{
+flex:1;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+
+
+
+
+
+
+
+
 .present{background:#00ff88;color:black}
 .absent{background:#ff4b5c;color:white}
 .stats{text-align:center;padding:5px}
 .credit{text-align:center;font-size:13px;padding:5px;opacity:0.8}
 .credit span{color:#00f2fe;text-shadow:0 0 10px #00f2fe}
+
+
+
+
 
 
 
@@ -172,11 +212,68 @@ to{opacity:1; transform:translateY(0);}
 
 
 
+
+
+
+
+/* ========================= */
+/* NEON FLOATING PARTICLES */
+/* ========================= */
+
+.particles{
+position:absolute;
+width:100%;
+height:100%;
+top:0;
+left:0;
+overflow:hidden;
+z-index:0;
+pointer-events:none;
+}
+
+..particles span{
+position:absolute;
+display:block;
+width:4px; /* thoda small */
+height:4px;
+background:#00f2fe;
+border-radius:50%;
+bottom:-20px;
+animation:floatUp linear infinite;
+box-shadow:0 0 5px #00f2fe,
+            0 0 10px #00f2fe;
+opacity:0.6; /* softer look */
+}
+
+@keyframes floatUp{
+0%{
+transform:translateY(0) scale(1);
+opacity:0;
+}
+10%{
+opacity:1;
+}
+100%{
+transform:translateY(-110vh) scale(0.5);
+opacity:0;
+}
+}
+
+
+
+
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
 </head>
 
 <body>
 <div class="glass">
+    
+    
+    <div class="particles"></div>
 
 <!-- LOGIN -->
 <div id="loginPage">
@@ -209,7 +306,12 @@ to{opacity:1; transform:translateY(0);}
 <input type="date" id="dateSelect">
 <input type="text" id="studentName" placeholder="Student Name">
 <button onclick="addStudent()">Add</button>
+<button onclick="loadAttendance()">Load</button>   <!-- NEW -->
 <button onclick="downloadCSV()">Download CSV</button>
+
+
+<button onclick="clearTodayAttendance()">Clear Today</button>
+
 </div>
 
 <div id="classTeacher" style="text-align:center"></div>
@@ -239,7 +341,7 @@ Clear History
 
 <div id="historyList"></div>
 
-<canvas id="analyticsChart"></canvas>
+<canvas id="analyticsChart" style="max-height:250px;"></canvas>
 
 
 
@@ -273,12 +375,55 @@ UNDO
 
 
 <script type="module">
+    
+  let unsubscribe = null;  
+  
+ 
+  
+  
+    
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged }
 from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, doc,
 updateDoc, deleteDoc, query, where, onSnapshot, orderBy }
 from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+
+
+
+
+
+// =============================
+// SAFE PARTICLE GENERATOR
+// =============================
+
+window.addEventListener("DOMContentLoaded", () => {
+
+const container = document.querySelector(".particles");
+
+if(!container) return; // safety check
+
+for(let i=0;i<50;i++){
+
+let particle = document.createElement("span");
+
+particle.style.left = Math.random()*100 + "%";
+particle.style.animationDuration = (8 + Math.random()*12) + "s";
+particle.style.opacity = Math.random();
+
+container.appendChild(particle);
+
+}
+
+});
+
+
+
+
+
+
+
 
 const firebaseConfig = {
 apiKey: "AIzaSyD-ALQAWk3vDfEX5MoeJ5yMFskuyA1wBiA",
@@ -374,6 +519,9 @@ renderStudents();
 
 
 async function renderStudents(){
+
+if(unsubscribe) unsubscribe();   // old listener remove
+
 let q=query(
 collection(db,"attendance"),
 where("teacher","==",currentTeacher),
@@ -382,7 +530,7 @@ where("date","==",dateSelect.value),
 orderBy("createdAt","asc")
 );
 
-onSnapshot(q,(snap)=>{
+unsubscribe = onSnapshot(q,(snap)=>{
 
 studentList.innerHTML="";
 let total=0,present=0;
@@ -544,56 +692,122 @@ loadHistory();
 
 };
 
-window.generateAnalytics=()=>{
-let month=historyMonth.value;
-let presentCount=0;
-let totalCount=0;
+let chartInstance = null;
 
-getDocs(collection(db,"attendance")).then(snap=>{
+window.generateAnalytics = async () => {
+
+let month = historyMonth.value;
+let presentCount = 0;
+let totalCount = 0;
+
+let q = query(
+collection(db,"attendance"),
+where("teacher","==",currentTeacher)
+);
+
+let snap = await getDocs(q);
+
 snap.forEach(d=>{
-let data=d.data();
-if(data.teacher===currentTeacher && data.date.startsWith(month)){
+let data = d.data();
+if(data.date.startsWith(month)){
 totalCount++;
-if(data.status==="Present")presentCount++;
+if(data.status==="Present") presentCount++;
 }
 });
 
-let percent = totalCount>0 ? Math.round((presentCount/totalCount)*100) : 0;
+let absentCount = totalCount - presentCount;
 
-let canvas=document.getElementById("analyticsChart");
-canvas.width=350;
-canvas.height=200;
+let ctx = document.getElementById("analyticsChart").getContext("2d");
 
-let ctx=canvas.getContext("2d");
-ctx.clearRect(0,0,350,200);
+// Destroy old chart if exists
+if(chartInstance){
+chartInstance.destroy();
+}
 
-let presentHeight = percent * 1.5;
-let absentHeight = (100-percent) * 1.5;
-
-// Present
-ctx.fillStyle="#00ff88";
-ctx.fillRect(80,180-presentHeight,80,presentHeight);
-
-// Absent
-ctx.fillStyle="#ff4b5c";
-ctx.fillRect(200,180-absentHeight,80,absentHeight);
-
-// Text
-ctx.fillStyle="white";
-ctx.font="bold 16px Arial";
-ctx.fillText(percent+"% Present",70,195);
-ctx.fillText((100-percent)+"% Absent",180,195);
-
+chartInstance = new Chart(ctx,{
+type:'bar',
+data:{
+labels:['Present','Absent'],
+datasets:[{
+data:[presentCount, absentCount],
+backgroundColor:[
+'rgba(0,255,136,0.8)',
+'rgba(255,75,92,0.8)'
+],
+borderColor:[
+'#00ff88',
+'#ff4b5c'
+],
+borderWidth:2
+}]
+},
+options:{
+responsive:true,
+plugins:{
+legend:{display:false}
+},
+scales:{
+y:{
+beginAtZero:true,
+ticks:{color:'white'},
+grid:{color:'rgba(255,255,255,0.1)'}
+},
+x:{
+ticks:{color:'white'},
+grid:{display:false}
+}
+},
+animation:{
+duration:1200,
+easing:'easeOutQuart'
+}
+}
 });
+
 };
-
-
 
 
 function showUndoMessage(){
 let box = document.getElementById("undoBox");
 box.style.display="block";
 }
+
+
+
+window.loadAttendance = () => {
+renderStudents();
+};
+
+
+
+classSelect.addEventListener("change", renderStudents);
+dateSelect.addEventListener("change", renderStudents);
+
+
+
+
+
+window.clearTodayAttendance = async () => {
+if(!confirm("Clear today attendance?")) return;
+
+let q = query(
+collection(db,"attendance"),
+where("teacher","==",currentTeacher),
+where("class","==",classSelect.value),
+where("date","==",dateSelect.value)
+);
+
+let snap = await getDocs(q);
+
+snap.forEach(async (d)=>{
+await deleteDoc(doc(db,"attendance",d.id));
+});
+
+renderStudents();
+};
+
+
+
 
 
 
