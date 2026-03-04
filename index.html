@@ -304,13 +304,25 @@ opacity:0;
 <div class="controls">
 <select id="classSelect"></select>
 <input type="date" id="dateSelect">
+
+
+<input
+type="number"
+id="studentRoll"
+placeholder="Roll Number"
+style="padding:10px;border-radius:10px;margin-right:10px;">
+
 <input type="text" id="studentName" placeholder="Student Name">
 <button onclick="addStudent()">Add</button>
-<button onclick="loadAttendance()">Load</button>   <!-- NEW -->
+
 <button onclick="downloadCSV()">Download CSV</button>
 
 
 <button onclick="clearTodayAttendance()">Clear Today</button>
+
+
+<button onclick="saveTodayToHistory()">Save To History</button>
+
 
 </div>
 
@@ -333,6 +345,17 @@ opacity:0;
 
 <div class="controls">
 <select id="historyMonth"></select>
+
+
+<input 
+type="text" 
+id="searchStudent" 
+placeholder="Search student name..."
+onkeyup="filterHistory()" 
+style="padding:10px;border-radius:10px;margin-right:10px;">
+
+
+
 <button onclick="loadHistory()">Load</button>
 <button onclick="clearHistory()" style="background:#ff4b5c;color:white">
 Clear History
@@ -341,9 +364,46 @@ Clear History
 
 <div id="historyList"></div>
 
-<canvas id="analyticsChart" style="max-height:250px;"></canvas>
+
+<div style="text-align:center;margin:10px;">
+<button id="toggleReportBtn" onclick="toggleReport()" style="
+background:#00f2fe;
+border:none;
+padding:8px 14px;
+border-radius:20px;
+font-size:18px;
+cursor:pointer;
+">
+▲ Report
+</button>
+</div>
+
+<div id="reportSection" style="display:none;">
 
 
+<div id="attendancePercent" style="text-align:center;font-size:18px;font-weight:bold;margin:10px;color:#00ff88;"></div>
+
+
+
+<div id="monthlyReport" style="
+text-align:center;
+margin:10px;
+font-size:16px;
+font-weight:bold;
+color:#00f2fe;
+"></div>
+
+
+
+
+<div id="graphBox">
+                
+    
+<canvas id="analyticsChart"></canvas>
+</div>
+
+
+</div>
 
 <div id="undoBox" style="
 display:none;
@@ -387,6 +447,7 @@ from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, doc,
 updateDoc, deleteDoc, query, where, onSnapshot, orderBy }
 from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
 
 
 
@@ -487,7 +548,7 @@ attendancePage.classList.add("active");
 historyPage.classList.remove("active");
 };
 
-window.showHistory=()=>{
+window.showHistory = ()=>{
 attendancePage.classList.remove("active");
 historyPage.classList.add("active");
 populateMonths();
@@ -498,14 +559,17 @@ populateMonths();
 window.addStudent=async()=>{
 if(!studentName.value)return;
 
-await addDoc(collection(db,"attendance"),{
-teacher:currentTeacher,
-class:classSelect.value,
-date:dateSelect.value,
-name:studentName.value,
-status:"Absent",
-createdAt: Date.now()
+await addDoc(collection(db, "attendance_today"), {
+  teacher: currentTeacher,
+  class: classSelect.value,
+  date: dateSelect.value,
+  roll: studentRoll.value,
+  name: studentName.value,
+  status: "Present",
+  createdAt: new Date()
 });
+
+
 
 studentName.value="";
 renderStudents();
@@ -522,7 +586,10 @@ async function renderStudents(){
 if(unsubscribe) unsubscribe();   // old listener remove
 
 let q=query(
-collection(db,"attendance"),
+collection(db,"attendance_today"),
+
+
+
 where("teacher","==",currentTeacher),
 where("class","==",classSelect.value),
 where("date","==",dateSelect.value),
@@ -542,7 +609,7 @@ if(s.status==="Present")present++;
 
 studentList.innerHTML+=`
 <div class="student">
-<span>(${index}) ${s.name}</span>
+<span>Roll ${index} - ${s.name}</span>
 <div>
 <button class="${s.status==='Present'?'present':'absent'}"
 onclick="toggleStatus('${docSnap.id}','${s.status}')">${s.status}</button>
@@ -561,61 +628,151 @@ stats.innerText=`Total: ${total} | Present: ${present}`;
 
 window.toggleStatus=async(id,status)=>{
 let newStatus=status==="Present"?"Absent":"Present";
-await updateDoc(doc(db,"attendance",id),{status:newStatus});
+await updateDoc(doc(db,"attendance_today",id),{status:newStatus});
 renderStudents();
 };
 
 window.editStudent=async(id,name)=>{
 let newName=prompt("Edit Name:",name);
 if(newName)
-await updateDoc(doc(db,"attendance",id),{name:newName});
+await updateDoc(doc(db,"attendance_today",id),{name:newName});
 renderStudents();
 };
 
 window.deleteStudent=async(id)=>{
 if(confirm("Delete student?")){
-await deleteDoc(doc(db,"attendance",id));
+await deleteDoc(doc(db,"attendance_today",id));
 renderStudents();
 }
 };
 
 function populateMonths(){
-let months=new Set();
-getDocs(collection(db,"attendance")).then(snap=>{
+
+let months = new Set();
+
+getDocs(collection(db,"attendance_history")).then(snap=>{
+
 snap.forEach(d=>{
-if(d.data().teacher===currentTeacher){
+if(d.data().teacher === currentTeacher){
 months.add(d.data().date.substring(0,7));
 }
 });
-historyMonth.innerHTML="";
+
+historyMonth.innerHTML = "";
+
 months.forEach(m=>{
-historyMonth.innerHTML+=`<option>${m}</option>`;
+historyMonth.innerHTML += `<option>${m}</option>`;
 });
-});
+
+// AUTO LOAD HISTORY
+if(historyMonth.options.length > 0){
+historyMonth.selectedIndex = 0;
+loadHistory();
 }
 
+});
 
+}
 
 
 window.loadHistory=()=>{
 let month=historyMonth.value;
 historyList.innerHTML="";
-getDocs(collection(db,"attendance")).then(snap=>{
+
+getDocs(collection(db,"attendance_history")).then(snap=>{
+
 snap.forEach(d=>{
 let data=d.data();
+
 if(data.teacher===currentTeacher && data.date.startsWith(month)){
+
 historyList.innerHTML+=`
 <div class="student">
-<span>${data.date} - ${data.class} - ${data.name} - ${data.status}</span>
+    
+<span>${data.date} - ${data.class} - Roll ${data.roll} - ${data.name} - ${data.status}</span>
 <button onclick="deleteHistory('${d.id}')">🗑</button>
 </div>`;
+
 }
-});
+
 });
 
-generateAnalytics();   // ✅ Yaha
+generateAnalytics();   // ✅ Yaha hona chahiye
+
+});
 
 };
+
+
+
+
+
+
+
+
+window.filterHistory = function(){
+
+let input = document.getElementById("searchStudent").value.toLowerCase();
+
+document.querySelectorAll("#historyList .student").forEach(row=>{
+
+let nameText = row.querySelector("span").innerText.toLowerCase();
+
+if(nameText.includes(input)){
+row.style.display="flex";
+}else{
+row.style.display="none";
+}
+
+});
+
+};
+
+
+
+
+
+window.filterHistory = function(){
+
+let input = document.getElementById("searchStudent").value.toLowerCase();
+
+document.querySelectorAll("#historyList .student").forEach(row=>{
+
+let text = row.innerText.toLowerCase();
+
+if(text.includes(input)){
+row.style.display="flex";
+}else{
+row.style.display="none";
+}
+
+});
+
+};
+
+
+// 👇 Yaha paste karo
+const searchInput = document.getElementById("searchStudent");
+const graphBox = document.getElementById("graphBox");
+
+searchInput.addEventListener("focus", ()=>{
+graphBox.style.display="none";
+});
+
+searchInput.addEventListener("blur", ()=>{
+graphBox.style.display="block";
+});
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -623,7 +780,7 @@ generateAnalytics();   // ✅ Yaha
 
 window.deleteHistory=async(id)=>{
 if(confirm("Delete this record?")){
-await deleteDoc(doc(db,"attendance",id));
+await deleteDoc(doc(db,"attendance_history",id));
 loadHistory();
 }
 };
@@ -654,7 +811,7 @@ if(!confirm("Are you sure you want to delete ALL history of this month?")){
 return;
 }
 
-let snap = await getDocs(collection(db,"attendance"));
+let snap = await getDocs(collection(db,"attendance_history"));
 
 pendingDeletes = [];
 
@@ -678,7 +835,7 @@ deleteTimer = setTimeout(async ()=>{
 let deletePromises = [];
 
 pendingDeletes.forEach(id=>{
-deletePromises.push(deleteDoc(doc(db,"attendance",id)));
+deletePromises.push(deleteDoc(doc(db,"attendance_history",id)));;
 });
 
 await Promise.all(deletePromises);
@@ -693,14 +850,21 @@ loadHistory();
 
 let chartInstance = null;
 
+
+
+
+
+
 window.generateAnalytics = async () => {
 
 let month = historyMonth.value;
 let presentCount = 0;
 let totalCount = 0;
+let percentage = 0;
+
 
 let q = query(
-collection(db,"attendance"),
+collection(db,"attendance_history"),
 where("teacher","==",currentTeacher)
 );
 
@@ -716,12 +880,72 @@ if(data.status==="Present") presentCount++;
 
 let absentCount = totalCount - presentCount;
 
-let ctx = document.getElementById("analyticsChart").getContext("2d");
+
+if(totalCount > 0){
+percentage = Math.round((presentCount / totalCount) * 100);
+}
+
+
+
+
+document.getElementById("attendancePercent").innerText =
+"Attendance: " + percentage + "%";
+
+
+
+document.getElementById("monthlyReport").innerHTML =
+"Total Records: " + totalCount +
+"<br>Present: " + presentCount +
+"<br>Absent: " + absentCount +
+"<br>Attendance: " + percentage + "%";
+
+
+
+
+
+
+
+
+
+
+let canvas = document.getElementById("analyticsChart");
+if(!canvas) return;
+
+let ctx = canvas.getContext("2d");
+
 
 // Destroy old chart if exists
 if(chartInstance){
 chartInstance.destroy();
 }
+
+
+
+
+const percentagePlugin = {
+id:'percentageLabel',
+afterDraw(chart){
+
+const {ctx, chartArea:{top,width}} = chart;
+
+ctx.save();
+ctx.font = "bold 22px Arial";
+ctx.fillStyle = "#00ff88";
+ctx.textAlign = "center";
+
+ctx.fillText(
+percentage + "% Attendance",
+chart.width/2,
+top - 10
+);
+
+}
+};
+
+
+
+
+
 
 chartInstance = new Chart(ctx,{
 type:'bar',
@@ -729,15 +953,21 @@ data:{
 labels:['Present','Absent'],
 datasets:[{
 data:[presentCount, absentCount],
+
+
 backgroundColor:[
-'rgba(0,255,136,0.8)',
-'rgba(255,75,92,0.8)'
+'rgba(0,255,136,0.6)',
+'rgba(255,75,92,0.6)'
 ],
+
+
+
 borderColor:[
 '#00ff88',
 '#ff4b5c'
 ],
-borderWidth:2
+borderWidth:3,
+hoverBorderWidth:5
 }]
 },
 options:{
@@ -787,10 +1017,41 @@ dateSelect.addEventListener("change", renderStudents);
 
 
 window.clearTodayAttendance = async () => {
-if(!confirm("Clear today attendance?")) return;
+
+    if(!confirm("Clear only today's attendance?")) return;
+    
+    
+    await saveTodayToHistory();
+
+    let q = query(
+        collection(db,"attendance_today"),
+        where("teacher","==",currentTeacher),
+        where("class","==",classSelect.value),
+        where("date","==",dateSelect.value)
+    );
+
+    let snap = await getDocs(q);
+
+    snap.forEach(async (d)=>{
+       await deleteDoc(doc(db,"attendance_today",d.id));
+    });
+
+    alert("Today's attendance cleared only.");
+
+};
+
+
+
+
+
+
+
+
+
+window.saveTodayToHistory = async () => {
 
 let q = query(
-collection(db,"attendance"),
+collection(db,"attendance_today"),
 where("teacher","==",currentTeacher),
 where("class","==",classSelect.value),
 where("date","==",dateSelect.value)
@@ -798,12 +1059,56 @@ where("date","==",dateSelect.value)
 
 let snap = await getDocs(q);
 
-snap.forEach(async (d)=>{
-await deleteDoc(doc(db,"attendance",d.id));
+if(snap.empty){
+alert("No attendance to save");
+return;
+}
+
+for (const d of snap.docs){
+
+let data = d.data();
+
+// check if already saved
+let checkQuery = query(
+collection(db,"attendance_history"),
+where("teacher","==",data.teacher),
+where("class","==",data.class),
+where("date","==",data.date),
+where("name","==",data.name)
+);
+
+let checkSnap = await getDocs(checkQuery);
+
+if(checkSnap.empty){
+
+await addDoc(collection(db,"attendance_history"),{
+teacher:data.teacher,
+class:data.class,
+date:data.date,
+roll:data.roll,
+name:data.name,
+status:data.status,
+createdAt:new Date()
 });
 
-renderStudents();
+}else{
+
+// update existing record
+checkSnap.forEach(async (docSnap)=>{
+await updateDoc(doc(db,"attendance_history",docSnap.id),{
+status:data.status
+});
+});
+
+}
+}
+
+alert("Attendance saved to history ✅");
+
 };
+
+
+
 
 
 
@@ -818,12 +1123,12 @@ window.downloadCSV = function() {
 
     document.querySelectorAll(".student").forEach(student => {
 
-        let text = student.innerText.split("\n");
-        let firstLine = text[0];
-        let status = text[1] || "";
+let name = student.querySelector("span").innerText;
+let status = student.querySelector("button").innerText;
 
-        rows.push([firstLine, status]);
-    });
+rows.push([name, status]);
+
+});
 
     let csvContent = rows.map(e => e.join(",")).join("\n");
 
@@ -859,11 +1164,10 @@ window.downloadMonthlyCSV = async function() {
     let rows = [];
     rows.push(["Date","Class","Name","Status"]);
 
-    let q = query(
-        collection(db,"attendance"),
-        where("teacher","==",currentTeacher)
-    );
-
+   let q = query(
+collection(db,"attendance_history"),
+where("teacher","==",currentTeacher)
+);
     let snap = await getDocs(q);
 
     snap.forEach(d=>{
@@ -908,9 +1212,41 @@ window.downloadMonthlyCSV = async function() {
 
 
 
+window.toggleReport = function(){
+
+let section = document.getElementById("reportSection");
+let btn = document.getElementById("toggleReportBtn");
+
+if(section.style.display === "none"){
+
+section.style.display = "block";
+btn.innerText = "▲ Report";
+
+if(chartInstance){
+chartInstance.update(); // animation trigger
+}
+
+section.scrollIntoView({behavior:"smooth"});
+
+}else{
+
+section.style.display = "none";
+btn.innerText = "▼ Report";
+
+}
+
+};
+
+
+
+
+
 
 
 
 </script>
 </body>
+
+
+
 </html>
