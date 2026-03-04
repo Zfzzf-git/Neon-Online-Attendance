@@ -21,8 +21,15 @@ min-height:0;
     
 *{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI}
 body{
-height:100vh;
-background:linear-gradient(-45deg,#0f0c29,#302b63,#24243e,#00f2fe);
+height:100dvh;
+
+
+
+background:linear-gradient(-45deg,#0f172a,#1e293b,#0f2027,#134e4a);
+background-size:400% 400%;
+animation:bg 12s ease infinite;
+
+
 background-size:400% 400%;
 animation:bg 12s ease infinite;
 display:flex;justify-content:center;align-items:center;color:white}
@@ -38,7 +45,7 @@ display:flex;justify-content:center;align-items:center;color:white}
 position:relative;
 width:95%;
 max-width:1000px;
-height:95vh;
+height:100dvh;
 background:rgba(255,255,255,0.05);
 border-radius:25px;
 backdrop-filter:blur(20px);
@@ -98,6 +105,7 @@ margin:8px 0;
 padding:12px;
 border-radius:15px;
 gap:10px;
+flex-wrap:nowrap;
 }
 
 .student span{
@@ -108,7 +116,12 @@ text-overflow:ellipsis;
 }
 
 
-
+.student div{
+display:flex;
+align-items:center;
+gap:8px;
+flex-shrink:0;
+}
 
 
 
@@ -188,7 +201,7 @@ border:none;
 font-weight:bold;
 cursor:pointer;
 background:linear-gradient(45deg,#00f2fe,#00ff88);
-color:black;
+color:#0f172a;
 transition:0.3s;
 }
 
@@ -220,7 +233,7 @@ to{opacity:1; transform:translateY(0);}
 /* NEON FLOATING PARTICLES */
 /* ========================= */
 
-.particles{
+..particles{
 position:absolute;
 width:100%;
 height:100%;
@@ -262,6 +275,343 @@ opacity:0;
 
 
 
+
+
+
+
+.neonText{
+color:#22d3ee;
+text-shadow:
+0 0 5px #22d3ee,
+0 0 10px #22d3ee,
+0 0 20px #22d3ee,
+0 0 40px #06b6d4;
+animation:textPulse 2s infinite alternate;
+}
+
+@keyframes textPulse{
+from{ text-shadow:0 0 10px #22d3ee;}
+to{ text-shadow:0 0 30px #06b6d4;}
+}
+
+
+
+
+
+
+
+
+button{
+background:#22d3ee;
+color:black;
+box-shadow:0 0 10px #22d3ee;
+transition:0.3s;
+}
+
+button:hover{
+transform:scale(1.05);
+box-shadow:
+0 0 10px #22d3ee,
+0 0 20px #22d3ee,
+0 0 40px #06b6d4;
+}
+
+button:active{
+transform:scale(0.95);
+box-shadow:
+0 0 5px #22d3ee,
+0 0 30px #06b6d4 inset;
+}
+
+
+
+
+
+
+.student{
+background:rgba(255,255,255,0.05);
+border:1px solid rgba(34,211,238,0.2);
+box-shadow:0 0 10px rgba(34,211,238,0.2);
+transition:0.3s;
+}
+
+.student:hover{
+box-shadow:
+0 0 10px #22d3ee,
+0 0 20px #22d3ee;
+transform:scale(1.02);
+}
+
+
+
+
+input:focus, select:focus{
+box-shadow:
+0 0 10px #22d3ee,
+0 0 20px #06b6d4;
+border:1px solid #22d3ee;
+}
+
+
+
+
+
+
+
+/* ========================= */
+/* NEON ANIMATED BORDER BUTTON */
+/* ========================= */
+
+.neonButton{
+position:relative;
+padding:12px 28px;
+border-radius:30px;
+background:rgba(0,0,0,0.6);
+color:#22d3ee;
+font-weight:bold;
+border:none;
+cursor:pointer;
+overflow:hidden;
+z-index:1;
+}
+
+.neonButton::before{
+content:"";
+position:absolute;
+top:-2px;
+left:-2px;
+right:-2px;
+bottom:-2px;
+background:linear-gradient(
+90deg,
+#22d3ee,
+#06b6d4,
+#00ff88,
+#22d3ee
+);
+background-size:300%;
+border-radius:30px;
+z-index:-1;
+animation:neonMove 4s linear infinite;
+}
+
+.neonButton::after{
+content:"";
+position:absolute;
+top:2px;
+left:2px;
+right:2px;
+bottom:2px;
+background:#0f172a;
+border-radius:28px;
+z-index:-1;
+}
+
+@keyframes neonMove{
+0%{background-position:0%}
+100%{background-position:300%}
+}
+
+.neonButton:hover{
+color:white;
+box-shadow:
+0 0 10px #22d3ee,
+0 0 20px #22d3ee,
+0 0 40px #06b6d4;
+transform:scale(1.05);
+}
+
+
+
+
+
+/* ========================= */
+/* STUDENT STATUS GLOW */
+/* ========================= */
+
+.student.presentRow{
+border:1px solid #00ff88;
+box-shadow:
+0 0 10px #00ff88,
+0 0 20px #00ff88;
+}
+
+.student.absentRow{
+border:1px solid #ff4b5c;
+box-shadow:
+0 0 10px #ff4b5c,
+0 0 20px #ff4b5c;
+}
+
+
+
+
+
+/* Bottom Navigation */
+
+.bottomNav{
+position:fixed;
+bottom:0;
+left:0;
+width:100%;
+display:flex;
+justify-content:space-around;
+align-items:center;
+background:rgba(0,0,0,0.6);
+backdrop-filter:blur(20px);
+padding:10px 0;
+box-shadow:0 -5px 20px rgba(0,255,255,0.3);
+z-index:1000;
+}
+
+.bottomNav button{
+background:none;
+border:none;
+color:#22d3ee;
+font-size:14px;
+display:flex;
+flex-direction:column;
+align-items:center;
+gap:4px;
+cursor:pointer;
+transition:0.3s;
+}
+
+.bottomNav button:hover{
+transform:scale(1.1);
+text-shadow:0 0 10px #22d3ee;
+}
+
+
+
+
+.page{
+display:none;
+flex-direction:column;
+flex:1;
+padding-bottom:80px;
+}
+
+
+
+
+
+
+
+.presentGlow{
+border:2px solid #00ff88;
+box-shadow:
+0 0 10px #00ff88,
+0 0 25px #00ff88;
+}
+
+.absentGlow{
+border:2px solid #ff4b5c;
+box-shadow:
+0 0 10px #ff4b5c,
+0 0 25px #ff4b5c;
+}
+
+
+
+
+
+
+
+/* PROFILE POPUP */
+
+.profilePopup{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+display:none;
+justify-content:center;
+align-items:center;
+z-index:999;
+}
+
+.profileCard{
+background:#0f172a;
+padding:25px;
+border-radius:20px;
+text-align:center;
+width:80%;
+max-width:320px;
+box-shadow:0 0 25px #22d3ee;
+}
+
+.profileCard p{
+margin:8px 0;
+font-size:16px;
+}
+
+
+
+
+
+
+
+.profilePopup{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+display:none;
+justify-content:center;
+align-items:center;
+z-index:999;
+}
+
+.profileCard{
+background:#0f172a;
+padding:25px;
+border-radius:20px;
+width:300px;
+text-align:center;
+box-shadow:0 0 30px #22d3ee;
+}
+
+.profileCard h2{
+color:#22d3ee;
+text-shadow:0 0 10px #22d3ee;
+}
+
+.profileCard button{
+margin-top:15px;
+}
+
+
+
+.keyboardOpen #bottomArea{
+display:none;
+}
+
+
+
+
+#undoBox button{
+color:#22d3ee;
+}
+
+
+
+#undoBox button{
+color:white !important;
+}
+
+
+
+#loginPage button{
+color:white !important;
+}
+
+
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -281,8 +631,8 @@ opacity:0;
 <input type="email" id="teacherEmail" placeholder="Email">
 <input type="password" id="teacherPass" placeholder="Password">
 <div class="login-buttons">
-<button id="registerBtn">Register</button>
-<button id="loginBtn">Login</button>
+<button class="neonButton" id="registerBtn">Register</button>
+<button class="neonButton" id="loginBtn">Login</button>
 </div>
 <div id="errorMsg" style="color:#ff4b5c"></div>
 </div>
@@ -290,20 +640,25 @@ opacity:0;
 <!-- APP -->
 <div id="app">
 
-<div class="header">
-📘 Neon Attendance Pro
-<span id="welcome"></span>
-<button onclick="showAttendance()">Attendance</button>
-<button onclick="showHistory()">History</button>
-<button onclick="logout()">Logout</button>
+
+
+<div class="header neonText">
+📘 Neon Attendance Pro | <span id="welcome"></span>
+
+
+
+
+
 </div>
 
 <!-- ATTENDANCE PAGE -->
 <div id="attendancePage" class="page active">
+    
+    
 
 <div class="controls">
 <select id="classSelect"></select>
-<input type="date" id="dateSelect">
+<input type="date" id="dateSelect" onchange="loadAttendanceByDate()">
 
 
 <input
@@ -313,21 +668,23 @@ placeholder="Roll Number"
 style="padding:10px;border-radius:10px;margin-right:10px;">
 
 <input type="text" id="studentName" placeholder="Student Name">
-<button onclick="addStudent()">Add</button>
+<button class="neonButton" onclick="addStudent()">Add</button>
 
-<button onclick="downloadCSV()">Download CSV</button>
-
-
-<button onclick="clearTodayAttendance()">Clear Today</button>
+<button class="neonButton" onclick="downloadCSV()">Download CSV</button>
 
 
-<button onclick="saveTodayToHistory()">Save To History</button>
+<button class="neonButton" onclick="clearTodayAttendance()">Clear Today</button>
+
+
+<button class="neonButton" onclick="saveTodayToHistory()">Save To History</button>
 
 
 </div>
 
 <div id="classTeacher" style="text-align:center"></div>
+
 <div id="studentList"></div>
+
 <div class="stats" id="stats"></div>
 
 
@@ -356,17 +713,19 @@ style="padding:10px;border-radius:10px;margin-right:10px;">
 
 
 
-<button onclick="loadHistory()">Load</button>
-<button onclick="clearHistory()" style="background:#ff4b5c;color:white">
+<button class="neonButton" onclick="loadHistory()">Load</button>
+
+<button class="neonButton" onclick="clearHistory()" style="background:#ff4b5c;color:white">
 Clear History
 </button>
+
 </div>
 
 <div id="historyList"></div>
 
 
 <div style="text-align:center;margin:10px;">
-<button id="toggleReportBtn" onclick="toggleReport()" style="
+<button class="neonButton" id="toggleReportBtn" onclick="toggleReport()" style="
 background:#00f2fe;
 border:none;
 padding:8px 14px;
@@ -414,7 +773,7 @@ text-align:center;
 border-radius:10px;
 ">
 History will be deleted in 10 seconds...
-<button onclick="undoDelete()" style="margin-left:10px;background:white;color:black">
+<button class="neonButton" onclick="undoDelete()" style="margin-left:10px;background:white;color:black">
 UNDO
 </button>
 </div>
@@ -422,8 +781,7 @@ UNDO
 
 
 
-
-<button onclick="downloadMonthlyCSV()">Download Monthly CSV</button>
+<button class="neonButton" onclick="downloadMonthlyCSV()">Download Monthly CSV</button>
 
 <div class="credit">
 © 2026 | Designed & Developed By <span>Zakariya Mukadam</span>
@@ -431,6 +789,85 @@ UNDO
 
 
 </div>
+
+
+
+<div class="bottomNav">
+
+<button onclick="showAttendance()">
+📋
+<span>Attendance</span>
+</button>
+
+<button onclick="showHistory()">
+📊
+<span>History</span>
+</button>
+
+<button onclick="logout()">
+🚪
+<span>Logout</span>
+</button>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- STUDENT PROFILE POPUP -->
+
+<div id="studentProfilePopup" class="profilePopup">
+
+<div class="profileCard">
+
+<h2 class="neonText">Student Profile</h2>
+
+<p id="profileName"></p>
+<p id="profileRoll"></p>
+<p id="profileClass"></p>
+
+<p id="profilePresent"></p>
+<p id="profileAbsent"></p>
+<p id="profilePercent"></p>
+
+<button class="neonButton" onclick="closeProfile()">Close</button>
+
+</div>
+
+</div>
+
+
+
+
+
+<div id="studentProfilePopup" class="profilePopup">
+
+<div class="profileCard">
+
+<h2 id="profileName"></h2>
+
+<p id="profileRoll"></p>
+<p id="profileClass"></p>
+
+<div id="profileStats"></div>
+
+<button onclick="closeProfile()">Close</button>
+
+</div>
+
+</div>
+
+
+
+
 
 
 <script type="module">
@@ -600,7 +1037,7 @@ unsubscribe = onSnapshot(q,(snap)=>{
 
 studentList.innerHTML="";
 let total=0,present=0;
-let index=1;
+
 
 snap.forEach(docSnap=>{
 let s=docSnap.data();
@@ -608,8 +1045,9 @@ total++;
 if(s.status==="Present")present++;
 
 studentList.innerHTML+=`
-<div class="student">
-<span>Roll ${index} - ${s.name}</span>
+<div class="student ${s.status==='Present'?'presentRow':'absentRow'}"
+onclick="openProfile('${s.name}','${s.roll}','${classSelect.value}')"
+<span>(${s.roll}) ${s.name}</span>
 <div>
 <button class="${s.status==='Present'?'present':'absent'}"
 onclick="toggleStatus('${docSnap.id}','${s.status}')">${s.status}</button>
@@ -618,7 +1056,7 @@ onclick="toggleStatus('${docSnap.id}','${s.status}')">${s.status}</button>
 </div>
 </div>`;
 
-index++;
+
 });
 
 stats.innerText=`Total: ${total} | Present: ${present}`;
@@ -686,13 +1124,23 @@ let data=d.data();
 
 if(data.teacher===currentTeacher && data.date.startsWith(month)){
 
-historyList.innerHTML+=`
-<div class="student">
-    
-<span>${data.date} - ${data.class} - Roll ${data.roll} - ${data.name} - ${data.status}</span>
-<button onclick="deleteHistory('${d.id}')">🗑</button>
-</div>`;
+let glowClass = data.status === "Present" ? "presentGlow" : "absentGlow";
 
+
+if(data.status === "Present"){
+glowClass = "presentGlow";
+}else{
+glowClass = "absentGlow";
+}
+
+historyList.innerHTML+=`
+<div class="student ${glowClass}" onclick="handleStudentClick(event,'${data.name}','-','${data.class}')">
+
+<span>${data.date} - ${data.class} - ${data.name} - ${data.status}</span>
+
+<button class="deleteBtn" onclick="deleteHistory('${d.id}')">🗑</button>
+
+</div>`;
 }
 
 });
@@ -778,13 +1226,11 @@ graphBox.style.display="block";
 
 
 
-window.deleteHistory=async(id)=>{
-if(confirm("Delete this record?")){
-await deleteDoc(doc(db,"attendance_history",id));
-loadHistory();
-}
-};
+window.deleteHistory = async(event,id)=>{
+event.stopPropagation();
 
+await deleteDoc(doc(db,"attendance_history",id));
+};
 
 window.undoDelete = () => {
 clearTimeout(deleteTimer);
@@ -1236,6 +1682,160 @@ btn.innerText = "▼ Report";
 }
 
 };
+
+
+
+window.loadAttendanceByDate = ()=>{
+renderStudents();
+};
+
+
+
+
+
+window.openProfile = async function(name, roll, className){
+
+document.getElementById("profileName").innerText =
+"Name: " + name;
+
+document.getElementById("profileRoll").innerText =
+"Roll: " + roll;
+
+document.getElementById("profileClass").innerText =
+"Class: " + className;
+
+let present = 0;
+let total = 0;
+
+let snap = await getDocs(collection(db,"attendance_history"));
+
+snap.forEach(doc=>{
+
+let data = doc.data();
+
+if(data.teacher===currentTeacher && data.name===name){
+
+total++;
+
+if(data.status==="Present"){
+present++;
+}
+
+}
+
+});
+
+let absent = total - present;
+
+let percent = 0;
+
+if(total>0){
+percent = Math.round((present/total)*100);
+}
+
+document.getElementById("profileStats").innerHTML =
+
+"Total Days: "+total+
+"<br>Present: "+present+
+"<br>Absent: "+absent+
+"<br>Attendance: "+percent+"%";
+
+document.getElementById("studentProfilePopup").style.display="flex";
+
+};
+
+
+
+
+window.closeProfile = function(){
+document.getElementById("studentProfilePopup").style.display = "none";
+}
+
+
+
+
+
+
+
+
+window.handleStudentClick = function(event,name,roll,className){
+
+// agar delete button click hua hai to popup mat kholo
+if(event.target.classList.contains("deleteBtn")){
+return;
+}
+
+openProfile(name,roll,className);
+
+};
+
+
+
+
+
+window.closeProfile = function(){
+document.getElementById("studentProfilePopup").style.display="none";
+};
+
+
+
+document.addEventListener("focusin", function(e){
+
+if(e.target.tagName === "INPUT"){
+document.body.classList.add("keyboardOpen");
+}
+
+});
+
+document.addEventListener("focusout", function(e){
+
+if(e.target.tagName === "INPUT"){
+document.body.classList.remove("keyboardOpen");
+}
+
+});
+
+
+
+
+
+
+const bottomNav = document.querySelector(".bottomNav");
+const stats = document.querySelector(".stats");
+const credit = document.querySelector(".credit");
+
+document.addEventListener("focusin", (e)=>{
+if(e.target.tagName === "INPUT"){
+bottomNav.style.display="none";
+if(stats) stats.style.display="none";
+if(credit) credit.style.display="none";
+}
+});
+
+document.addEventListener("focusout", (e)=>{
+if(e.target.tagName === "INPUT"){
+bottomNav.style.display="flex";
+if(stats) stats.style.display="block";
+if(credit) credit.style.display="block";
+}
+});
+
+
+
+
+
+
+
+const studentList = document.getElementById("studentList");
+
+document.addEventListener("focusin", (e)=>{
+if(e.target.tagName === "INPUT"){
+setTimeout(()=>{
+studentList.scrollTop = studentList.scrollHeight;
+},300);
+}
+});
+
 
 
 
