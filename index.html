@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+
 <title>Neon Attendance Pro - Master</title>
 
 <style>
@@ -683,7 +687,7 @@ max-width:200px;
 <div class="controls">
 <select id="classSelect"></select>
 <input type="date" id="dateSelect" onchange="loadAttendanceByDate()">
-
+<input type="file" id="imageUpload" accept="image/*" multiple>
 
 <input
 type="number"
@@ -1859,6 +1863,86 @@ studentList.scrollTop = studentList.scrollHeight;
 },300);
 }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+async function addStudentFromOCR(name){
+
+await addDoc(collection(db,"attendance_today"),{
+teacher:currentTeacher,
+class:classSelect.value,
+date:dateSelect.value,
+name:name,
+status:"Absent",
+createdAt:new Date()
+});
+
+renderStudents();
+
+}
+
+
+
+
+
+
+
+
+
+document.getElementById("imageUpload").addEventListener("change", async function(){
+
+const files = this.files;
+
+for (let file of files) {
+
+alert("Scanning Image...");
+
+const result = await Tesseract.recognize(file,"eng");
+
+const text = result.data.text;
+
+console.log(text);
+
+processStudentText(text);
+
+}
+
+});
+
+function processStudentText(text){
+
+let lines = text.split("\n");
+
+lines.forEach(line => {
+
+line = line.trim();
+
+if(line.length > 2){
+
+addStudentFromOCR(line);
+
+}
+
+});
+
+}
+
+
+
+
 
 
 
