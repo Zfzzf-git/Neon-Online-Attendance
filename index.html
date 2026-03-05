@@ -1898,7 +1898,8 @@ const { data: { text } } = await Tesseract.recognize(
 file,
 'eng',
 {
-logger: m => console.log(m)
+logger: m => console.log(m),
+tessedit_pageseg_mode: 6
 }
 );
 
