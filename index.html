@@ -1921,11 +1921,18 @@ function processStudentText(text){
 
 const lines = text.split("\n");
 
-lines.forEach(async line=>{
+lines.forEach(async line => {
 
-let name = line.trim();
+let name = line
+.replace(/[0-9)/.]/g,"")   // numbers remove
+.replace(/[^a-zA-Z\s]/g,"") // symbols remove
+.trim();
 
-if(name.length > 2){
+if(name.length < 3) return;
+
+const words = name.split(" ");
+
+if(words.length < 1 || words.length > 4) return;
 
 await addDoc(collection(db,"attendance_today"),{
 teacher: currentTeacher,
@@ -1936,15 +1943,11 @@ status: "Absent",
 createdAt: new Date()
 });
 
-}
-
 });
 
 renderStudents();
 
 }
-
-
 
 </script>
 </body>
