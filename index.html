@@ -1089,7 +1089,7 @@ if(s.status==="Present")present++;
 
 studentList.innerHTML+=`
 <div class="student ${s.status==='Present'?'presentRow':'absentRow'}"
-onclick="openProfile('${s.name}','${s.roll}','${classSelect.value}')"
+onclick="openProfile('${s.name}','${s.roll}','${classSelect.value}')">
 <span>(${s.roll}) ${s.name}</span>
 <div>
 <button class="${s.status==='Present'?'present':'absent'}"
@@ -1921,26 +1921,47 @@ function processStudentText(text){
 
 const lines = text.split("\n");
 
-lines.forEach(async line => {
+let students = [];
+let current = "";
 
-let name = line
-.replace(/[0-9)/.]/g,"")   // numbers remove
-.replace(/[^a-zA-Z\s]/g,"") // symbols remove
-.trim();
+lines.forEach(line=>{
+
+line = line.trim();
+
+if(/^\d+\)/.test(line)){
+
+if(current){
+students.push(current);
+}
+
+current = line.replace(/^\d+\)/,"").trim();
+
+}else{
+
+current += " " + line;
+
+}
+
+});
+
+if(current){
+students.push(current);
+}
+
+students.forEach(async name=>{
+
+name = name.replace(/[^A-Za-z\s]/g,"").trim();
 
 if(name.length < 3) return;
-
-const words = name.split(" ");
-
-if(words.length < 1 || words.length > 4) return;
 
 await addDoc(collection(db,"attendance_today"),{
 teacher: currentTeacher,
 class: classSelect.value,
 date: dateSelect.value,
-name: name,
-status: "Absent",
-createdAt: new Date()
+roll:"",
+name:name,
+status:"Absent",
+createdAt:new Date()
 });
 
 });
@@ -1948,6 +1969,13 @@ createdAt: new Date()
 renderStudents();
 
 }
+
+
+
+
+
+
+
 
 </script>
 </body>
