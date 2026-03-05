@@ -1919,38 +1919,25 @@ processStudentText(text);
 
 function processStudentText(text){
 
-const lines = text.split("\n");
+let lines = text.split("\n");
 
-let students = [];
-let current = "";
-
-lines.forEach(line=>{
+lines.forEach(async line => {
 
 line = line.trim();
 
-if(/^\d+\)/.test(line)){
+if(!line) return;
 
-if(current){
-students.push(current);
-}
+// detect pattern like "1) Name"
+let match = line.match(/^(\d+)[\)\.]?\s*(.+)$/);
 
-current = line.replace(/^\d+\)/,"").trim();
+if(!match) return;
 
-}else{
+let roll = match[1];
 
-current += " " + line;
-
-}
-
-});
-
-if(current){
-students.push(current);
-}
-
-students.forEach(async name=>{
-
-name = name.replace(/[^A-Za-z\s]/g,"").trim();
+let name = match[2]
+.replace(/[^A-Za-z\s]/g,"")
+.replace(/\s+/g," ")
+.trim();
 
 if(name.length < 3) return;
 
@@ -1958,10 +1945,10 @@ await addDoc(collection(db,"attendance_today"),{
 teacher: currentTeacher,
 class: classSelect.value,
 date: dateSelect.value,
-roll:"",
-name:name,
-status:"Absent",
-createdAt:new Date()
+roll: roll,
+name: name,
+status: "Absent",
+createdAt: new Date()
 });
 
 });
@@ -1969,7 +1956,6 @@ createdAt:new Date()
 renderStudents();
 
 }
-
 
 
 
