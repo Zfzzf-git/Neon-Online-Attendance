@@ -1593,8 +1593,8 @@ window.downloadCSV = function() {
 
     document.querySelectorAll(".student").forEach(student => {
 
-let name = student.querySelector("span").innerText;
-let status = student.querySelector("button").innerText;
+let name = student.querySelector("span")?.innerText || "";
+let status = student.querySelector(".present, .absent")?.innerText || "";
 
 rows.push([name, status]);
 
