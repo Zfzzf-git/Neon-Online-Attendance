@@ -2391,15 +2391,13 @@ renderStudents();
 
 
 window.clearDownloads = function(){
-
 if(!confirm("Clear all download records?")) return;
 
-localStorage.removeItem("download_records");
+localStorage.removeItem("downloads");  // correct key
 
-let list = document.getElementById("downloadsList"); if(list){ list.innerHTML = ""; }
-
-};
-
+let list = document.getElementById("downloadsList");
+if(list){ list.innerHTML = ""; }
+}
 
 
 
@@ -2411,4 +2409,4 @@ let list = document.getElementById("downloadsList"); if(list){ list.innerHTML = 
 
 
 
-</html>
+    </html>
