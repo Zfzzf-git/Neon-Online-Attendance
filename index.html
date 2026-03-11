@@ -24,38 +24,39 @@ min-height:0;
     
     
 *{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI}
-
-
 body{
 height:100dvh;
-background:#0a0a0a;
 
-display:flex;
-justify-content:center;
-align-items:center;
 
-color:white;
+
+background:linear-gradient(-45deg,#0f172a,#1e293b,#0f2027,#134e4a);
+background-size:400% 400%;
+animation:bg 12s ease infinite;
+
+
+background-size:400% 400%;
+animation:bg 12s ease infinite;
+display:flex;justify-content:center;align-items:center;color:white}
+@keyframes bg{
+0%{background-position:0% 50%}
+50%{background-position:100% 50%}
+100%{background-position:0% 50%}
 }
 
 
 
 .glass{
-
+position:relative;
 width:95%;
 max-width:1000px;
 height:100dvh;
-
-background:#111111;
-
-border-radius:18px;
-
-border:1px solid #1f1f1f;
-
+background:rgba(255,255,255,0.05);
+border-radius:25px;
+backdrop-filter:blur(20px);
+box-shadow:0 0 40px rgba(0,255,255,0.4);
 display:flex;
 flex-direction:column;
-
-overflow:hidden;
-
+overflow:hidden;   /* IMPORTANT */
 }
 
 
@@ -72,20 +73,9 @@ display:flex;flex-direction:column;justify-content:center;
 align-items:center;height:100%;gap:10px}
 .login-buttons{display:flex;gap:10px;width:300px}
 #app{display:none;flex-direction:column;height:100%}
-
 .header{
-
-padding:15px;
-
-background:#151515;
-
-border-bottom:1px solid #ff1e1e;
-
-font-size:16px;
-
-}
-
-
+padding:15px;background:rgba(0,0,0,0.3);
+text-align:center;font-size:18px;position:sticky;top:0}
 .controls{
 padding:10px;
 display:flex;
@@ -117,29 +107,15 @@ display:flex;
 
 
 .student{
-
 display:flex;
 justify-content:space-between;
 align-items:center;
-
-background:#151515;
-
-margin:10px 0;
-
-padding:14px;
-
-border-radius:12px;
-
-border-left:4px solid #ff1e1e;
-
-transition:0.2s;
-
-}
-
-.student:hover{
-
-background:#1b1b1b;
-
+background:rgba(255,255,255,0.08);
+margin:8px 0;
+padding:12px;
+border-radius:15px;
+gap:10px;
+flex-wrap:nowrap;
 }
 
 .student span{
@@ -336,27 +312,10 @@ to{ text-shadow:0 0 30px #06b6d4;}
 
 
 button{
-
-background:#ff1e1e;
-
-color:white;
-
-border:none;
-
-border-radius:8px;
-
-padding:10px 16px;
-
-cursor:pointer;
-
-transition:0.2s;
-
-}
-
-button:hover{
-
-background:#ff3838;
-
+background:#22d3ee;
+color:black;
+box-shadow:0 0 10px #22d3ee;
+transition:0.3s;
 }
 
 button:hover{
@@ -480,26 +439,19 @@ transform:scale(1.05);
 /* STUDENT STATUS GLOW */
 /* ========================= */
 
-
-
-
-
 .student.presentRow{
-border-left:4px solid #00ff88;
-box-shadow:none;
+border:1px solid #00ff88;
+box-shadow:
+0 0 10px #00ff88,
+0 0 20px #00ff88;
 }
 
 .student.absentRow{
-border-left:4px solid #ff1e1e;
-box-shadow:none;
+border:1px solid #ff4b5c;
+box-shadow:
+0 0 10px #ff4b5c,
+0 0 20px #ff4b5c;
 }
-
-
-
-
-
-
-
 
 
 
@@ -752,7 +704,6 @@ box-shadow:
 0 0 35px rgba(34,211,238,0.6);
 
 }
-
 
 
 
@@ -2297,10 +2248,7 @@ function saveDownloadRecord(name){
 
 let downloads = JSON.parse(localStorage.getItem("downloads") || "[]");
 
-// duplicate remove
-downloads = downloads.filter(d => d.name !== name);
-
-downloads.unshift({
+downloads.push({
 name:name,
 date:new Date().toLocaleString()
 });
@@ -2320,9 +2268,6 @@ localStorage.setItem("downloads",JSON.stringify(downloads));
 function loadDownloads(){
 
 let downloads = JSON.parse(localStorage.getItem("downloads") || "[]");
-
-downloads.reverse();
-
 
 downloadsList.innerHTML="";
 
@@ -2458,41 +2403,10 @@ if(list){ list.innerHTML = ""; }
 
 
 
-window.deleteDownload = function(index){
-
-let downloads = JSON.parse(localStorage.getItem("downloads") || "[]");
-
-downloads.splice(index,1);
-
-localStorage.setItem("downloads",JSON.stringify(downloads));
-
-loadDownloads();
-
-}
-
-
-
-
-window.downloadAgain = function(name){
-
-if(name === "Attendance CSV"){
-downloadCSV();
-}
-
-if(name === "Monthly CSV"){
-downloadMonthlyCSV();
-}
-
-}
-
-
-
-
-
-
-
 
 </script>
 </body>
 
-      </html>
+
+
+    </html>
